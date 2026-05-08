@@ -12,7 +12,7 @@ let championPositionMap = {}; // Lookup map: { championId: [role1, role2, ...] }
 
 // Settings
 let showCooldown = true;
-let maxCooldown = 10;
+let maxCooldown = 30;
 let numberInputThreshold = 15;
 let abilityHaste = 0;
 let gameMode = 'timer'; // 'timer' or 'input'
