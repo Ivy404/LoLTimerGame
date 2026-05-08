@@ -336,7 +336,7 @@ document.getElementById('showCooldown').addEventListener('change', function() {
 });
 
 document.getElementById('maxCooldown').addEventListener('change', function() {
-    maxCooldown = parseInt(this.value) || 10;
+    maxCooldown = parseInt(this.value) || 30;
     loadChampionAbility(currentChampion);
 });
 
