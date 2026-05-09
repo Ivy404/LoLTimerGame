@@ -70,7 +70,9 @@ function randomTargetSeconds() {
 }
 
 function updateInstruction() {
-    if (showCooldown) {
+    if (gameMode === 'input') {
+        document.getElementById('instruction').textContent = 'Guess the cooldown time';
+    } else if (showCooldown) {
         document.getElementById('instruction').textContent = `Click stop on ${targetSeconds.toFixed(1)} seconds`;
     } else {
         document.getElementById('instruction').textContent = `Click when the ability cooldown ends`;
@@ -164,15 +166,19 @@ function loadChampionAbility(champion) {
 function setTimerVisibility() {
     const timer = document.getElementById('timer');
     const inputMode = document.getElementById('inputMode');
+    const cooldownInput = document.getElementById('cooldownInput');
     
     if (gameMode === 'timer') {
         timer.style.display = isRunning ? 'none' : 'block';
         inputMode.style.display = 'none';
     } else {
         timer.style.display = 'none';
-        inputMode.style.display = isRunning ? 'flex' : 'none';
+        inputMode.style.display = 'flex';
         if (isRunning) {
-            document.getElementById('cooldownInput').focus();
+            cooldownInput.disabled = false;
+            cooldownInput.focus();
+        } else {
+            cooldownInput.disabled = true;
         }
     }
 }
@@ -218,12 +224,16 @@ function resetGame() {
     clearInterval(intervalId);
     startTime = Date.now();
     document.getElementById('timer').textContent = '0.000';
+    const cooldownInput = document.getElementById('cooldownInput');
+    cooldownInput.value = '';
+    cooldownInput.disabled = false;
+    userInputValue = null;
     resetInstruction();
     loadChampionAbility(randomChampionEntry());
     setTimerVisibility();
     setFeedback(null);
     buttonState = 'start';
-    document.getElementById('toggleButton').textContent = 'Start Timer';
+    document.getElementById('toggleButton').textContent = gameMode === 'timer' ? 'Start Timer' : 'Start Input';
 }
 
 resetInstruction();
@@ -307,29 +317,55 @@ document.getElementById('grayAllBtn').addEventListener('click', function() {
 });
 
 document.getElementById('toggleButton').addEventListener('click', function() {
-    if (buttonState === 'start') {
-        startTime = Date.now();
-        isRunning = true;
-        intervalId = setInterval(updateTimer, 10);
-        setTimerVisibility();
-        setFeedback(null);
-        buttonState = 'stop';
-        this.textContent = 'Stop Timer';
-    } else if (buttonState === 'stop') {
-        const actualElapsed = Date.now() - startTime;
-        const diffMs = actualElapsed - targetSeconds * 1000;
-        setFeedback(diffMs);
-        isRunning = false;
-        clearInterval(intervalId);
-        setTimerVisibility();
-        buttonState = 'reset';
-        this.textContent = 'Reset Timer';
+    if (gameMode === 'timer') {
+        if (buttonState === 'start') {
+            startTime = Date.now();
+            isRunning = true;
+            intervalId = setInterval(updateTimer, 10);
+            setTimerVisibility();
+            setFeedback(null);
+            buttonState = 'stop';
+            this.textContent = 'Stop Timer';
+        } else if (buttonState === 'stop') {
+            const actualElapsed = Date.now() - startTime;
+            const diffMs = actualElapsed - targetSeconds * 1000;
+            setFeedback(diffMs);
+            isRunning = false;
+            clearInterval(intervalId);
+            setTimerVisibility();
+            buttonState = 'reset';
+            this.textContent = 'Reset Timer';
+        } else {
+            resetGame();
+        }
     } else {
-        resetGame();
+        if (buttonState === 'start') {
+            isRunning = true;
+            setTimerVisibility();
+            setFeedback(null);
+            buttonState = 'stop';
+            this.textContent = 'Confirm Input';
+        } else if (buttonState === 'stop') {
+            submitCooldownInput();
+            this.textContent = 'Next Ability';
+            buttonState = 'reset';
+        } else {
+            resetGame();
+        }
     }
 });
 
 // Settings event listeners
+document.getElementById('gameMode').addEventListener('change', function() {
+    gameMode = this.value;
+    if (gameMode === 'input') {
+        showCooldown = false;
+        document.getElementById('showCooldown').checked = false;
+    }
+    resetGame();
+    document.getElementById('toggleButton').textContent = gameMode === 'timer' ? 'Start Timer' : 'Start Input';
+});
+
 document.getElementById('showCooldown').addEventListener('change', function() {
     showCooldown = this.checked;
     updateInstruction();
@@ -347,4 +383,44 @@ document.getElementById('numberInputThreshold').addEventListener('change', funct
 document.getElementById('abilityHaste').addEventListener('change', function() {
     abilityHaste = parseInt(this.value) || 0;
     loadChampionAbility(currentChampion);
+});
+
+function submitCooldownInput() {
+    const input = document.getElementById('cooldownInput');
+    const value = parseFloat(input.value);
+    
+    if (isNaN(value) || value < 0) {
+        setFeedback(null);
+        return;
+    }
+    
+    userInputValue = value;
+    const diffSeconds = value - targetSeconds;
+    const diffMs = diffSeconds * 1000;
+    
+    // Set feedback for input mode
+    const feedback = document.getElementById('feedback');
+    const absDiffSeconds = Math.abs(diffSeconds);
+    const formattedDiff = absDiffSeconds.toFixed(1);
+    
+    feedback.textContent = `You were off by ${formattedDiff} seconds. The correct cooldown was ${targetSeconds.toFixed(1)} seconds.`;
+    
+    const absDiffMs = Math.abs(diffMs);
+    if (absDiffMs < 500) {
+        feedback.className = 'feedback green';
+    } else if (absDiffMs < 1000) {
+        feedback.className = 'feedback yellow';
+    } else {
+        feedback.className = 'feedback red';
+    }
+    
+    isRunning = false;
+    setTimerVisibility();
+    input.disabled = true;
+}
+
+document.getElementById('cooldownInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        document.getElementById('toggleButton').click();
+    }
 });

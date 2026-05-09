@@ -37,6 +37,7 @@ body {
     background: #171c22;
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
     margin: 0 auto;
+    min-height: 500px;
 }
 
 .settings-panel {
@@ -327,7 +328,6 @@ body {
 
 .input-mode {
     display: flex;
-    gap: 8px;
     justify-content: center;
     margin: 20px 0;
 }
@@ -341,28 +341,18 @@ body {
     border: 2px solid rgba(255, 212, 0, 0.3);
     border-radius: 8px;
     color: #e6e8eb;
+    transition: all 0.2s;
+}
+
+#cooldownInput:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 #cooldownInput:focus {
     outline: none;
     border-color: hsl(48, 100%, 60%);
     box-shadow: 0 0 8px rgba(255, 212, 0, 0.2);
-}
-
-.submit-btn {
-    padding: 10px 20px;
-    font-size: 14px;
-    font-weight: 600;
-    color: #f8faff;
-    background: linear-gradient(180deg, #2f4252 0%, #22303f 100%);
-    border: 1px solid #3f5467;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.submit-btn:hover {
-    background: linear-gradient(180deg, #3f5670 0%, #2b3d4c 100%);
 }
 
 .feedback {
